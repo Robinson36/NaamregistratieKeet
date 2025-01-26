@@ -1,6 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+<head><!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aanwezigheidsformulier</title>
+</head>
+<body>
+  <h1>Aanwezigheidsformulier</h1>
+  <form id="attendanceForm">
+    <label for="nameDropdown">Kies een naam of voer een nieuwe in:</label>
+    <select id="nameDropdown" name="name">
+      <option value="" disabled selected>Kies een naam</option>
+    </select>
+    <!-- Extra veld voor nieuwe naam -->
+    <div id="customNameField" style="display: none;">
+      <label for="customName">Voer je naam in:</label>
+      <input type="text" id="customName" name="customName" placeholder="Naam invoeren">
+    </div>
+    <button type="submit">Verstuur</button>
+  </form>
+  <p id="status"></p>
+
+  <script>
+    const fetchNamesURL = "https://script.google.com/macros/s/AKfycbxe3JbYO-XuVkIdfEjkIpYZuOxkOo1cHxrPHdCTUK8fLHoNRrx59TVjkogFCY-vBP5Y/exec";
+    const submitFormURL = "https://script.google.com/macros/s/AKfycbxe3JbYO-XuVkIdfEjkIpYZuOxkOo1cHxrPHdCTUK8fLHoNRrx59TVjkogFCY-vBP5Y/exec";
+
+    // Ophalen van namen en toevoegen aan de dropdown
+    async function loadNames() {
+      try {
+        const response = await fetch(fetchNamesURL);
+        const names = await response.json();
+
+        const dropdown = document.getElementById("nameDropdown");
+        names.forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
+
+        // Voeg een optie toe voor 'andere naam'
+        const otherOption = document.createElement("option");
+        otherOption.value = "other";
+        otherOption.textContent = "Andere naam";
+        dropdown.appendChild(otherOption);
+
+        // Stel de vorige keuze in uit localStorage (indien beschikbaar)
+        const savedName = localStorage.getItem("selectedName");
+        if (savedName) {
+          const matchingOption = Array.from(dropdown.options).find(option => option.value === savedName);
+          if (matchingOption) {
+            dropdown.value = savedName;
+          } else {
+            showCustomNameField(savedName);
+          }
+        }
+      } catch (error) {
+        console.error("Fout bij het ophalen van namen:", error);
+      }
+    }
+
+    // Laat invoerveld zien als 'Andere naam' wordt gekozen
+    document.getElementById("nameDropdown").addEventListener("change", function () {
+      if (this.value === "other") {
+        showCustomNameField("");
+      } else {
+        document.getElementById("customNameField").style.display = "none";
+        document.getElementById("customName").value = "";
+      }
+    });
+
+    // Toont het veld om een naam in te voeren
+    function showCustomNameField(name) {
+      document.getElementById("customNameField").style.display = "block";
+      document.getElementById("customName").value = name || "";
+    }
+
+    // Verwerk het formulier
+    document.getElementById("attendanceForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const dropdown = document.getElementById("nameDropdown");
+      const customNameField = document.getElementById("customName");
+      const selectedName = dropdown.value === "other" ? customNameField.value.trim() : dropdown.value;
+
+      if (!selectedName) {
+        document.getElementById("status").textContent = "Voer een naam in.";
+        return;
+      }
+
+      // Dynamische betaal-links
+      const now = new Date();
+      const hours = now.getHours();
+      const paymentLinkMorning = "https://betaalverzoek.rabobank.nl/betaalverzoek/?id=gea8-uwnRay7s6KDrqRSHQ";
+      const paymentLinkRest = "https://betaalverzoek.rabobank.nl/betaalverzoek/?id=xEN1-E4ZS9KcDSTSvdXzug";
+      const paymentLink = (hours >= 0 && hours < 11) ? paymentLinkMorning : paymentLinkRest;
+
+      // Sla de keuze van de gebruiker op
+      localStorage.setItem("selectedName", selectedName);
+
+      // Verstuur gegevens naar Google Apps Script
+      try {
+        const response = await fetch(submitFormURL, {
+          method: "POST",
+          body: JSON.stringify({ name: selectedName, payment: paymentLink }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.ok) {
+          document.getElementById("status").textContent = "Bedankt! Je wordt doorgestuurd.";
+          setTimeout(() => {
+            window.location.href = paymentLink;
+          }, 2000);
+        } else {
+          document.getElementById("status").textContent = "Er ging iets mis.";
+        }
+      } catch (error) {
+        document.getElementById("status").textContent = "Fout bij het verzenden van de gegevens.";
+        console.error(error);
+      }
+    });
+
+    // Laad namen bij het openen van de pagina
+    loadNames();
+  </script>
+</body>
+</html>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aanwezigheidsformulier</title>
