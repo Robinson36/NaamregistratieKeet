@@ -3,18 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naam Invoeren</title>
+  <title>Keuzelijst Formulier</title>
 </head>
 <body>
-  <h1>Vul je naam in</h1>
+  <h1>Maak een keuze</h1>
   <form id="nameForm">
-    <label for="name">Naam:</label>
-    <input type="text" id="name" name="name" required>
+    <label for="name">Kies een naam:</label>
+    <select id="name" name="name" required>
+      <option value="" disabled selected>Kies een naam</option>
+    </select>
     <button type="submit">Verstuur</button>
   </form>
   <p id="status"></p>
 
   <script>
+    // URL van je Google Apps Script
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxe3JbYO-XuVkIdfEjkIpYZuOxkOo1cHxrPHdCTUK8fLHoNRrx59TVjkogFCY-vBP5Y/exec";
+
+    // Ophalen van namen en toevoegen aan de dropdown
+    async function loadNames() {
+      try {
+        const response = await fetch(scriptURL);
+        const names = await response.json();
+
+        const dropdown = document.getElementById("name");
+        names.forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          dropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Fout bij het ophalen van namen:", error);
+      }
+    }
+
+    // Verwerk formulier
     document.getElementById("nameForm").addEventListener("submit", async function (event) {
       event.preventDefault();
 
@@ -23,13 +47,12 @@
       const hours = now.getHours();
 
       // Dynamische betaal-links
-      const paymentLinkMorning = "https://tikkie.me/pay/5-euro-link";
-      const paymentLinkRest = "https://tikkie.me/pay/10-euro-link";
+      const paymentLinkMorning = "https://betaalverzoek.rabobank.nl/betaalverzoek/?id=gea8-uwnRay7s6KDrqRSHQ";
+      const paymentLinkRest = "https://betaalverzoek.rabobank.nl/betaalverzoek/?id=xEN1-E4ZS9KcDSTSvdXzug";
 
       const paymentLink = (hours >= 0 && hours < 11) ? paymentLinkMorning : paymentLinkRest;
 
       // Verzenden naar Google Apps Script
-      const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
       try {
         const response = await fetch(scriptURL, {
           method: "POST",
@@ -38,7 +61,6 @@
         });
 
         if (response.ok) {
-          // Gebruiker doorsturen naar de juiste betaalpagina
           document.getElementById("status").textContent = "Bedankt! Je wordt doorgestuurd.";
           setTimeout(() => {
             window.location.href = paymentLink;
@@ -51,6 +73,9 @@
         console.error(error);
       }
     });
+
+    // Laad namen bij het openen van de pagina
+    loadNames();
   </script>
 </body>
 </html>
