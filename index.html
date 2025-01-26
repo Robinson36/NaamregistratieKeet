@@ -72,20 +72,21 @@
             };
 
             // Maak een POST-request naar de Apps Script Webservice
-            fetch('https://script.google.com/macros/s/AKfycbxe3JbYO-XuVkIdfEjkIpYZuOxkOo1cHxrPHdCTUK8fLHoNRrx59TVjkogFCY-vBP5Y/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+            fetch('http://213.134.238.49:3000/proxy', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(data)
             })
-            .then(response => response.text())
+            .then(response => response.json())
             .then(data => {
-                console.log('Success:', data);
+              console.log('Response from proxy:', data);
             })
             .catch((error) => {
-                console.error('Error:', error);
+              console.error('Error:', error);
             });
+
 
             // Maak een nieuwe link en open deze in een nieuw tabblad
             var link = document.createElement("a");
